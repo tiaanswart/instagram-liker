@@ -1,13 +1,5 @@
-const findPostsToLike = () => {
-  return document.querySelectorAll(
-    'article > div > section > span > button > svg[aria-label="Like"]'
-  );
-};
-
-const findPostsToRemove = () => {
-  return document.querySelectorAll(
-    'article > div > section > span > button > svg[aria-label="Unlike"]:not(.hide)'
-  );
+const findPostButtons = () => {
+  return document.querySelectorAll('article > div > section > span > button > svg');
 };
 
 let blocked = false;
@@ -51,43 +43,47 @@ const setup = {
 };
 
 const init = () => {
-  newButton.innerHTML = `Running (${setup.likesCount})`;
   newButton.disabled = !setup.canLike;
-  let postsToLike = Array.from(findPostsToLike());
-  let postsToRemove = Array.from(findPostsToRemove()).reverse();
-  if (postsToRemove.length) {
-    postsToRemove.forEach((post) => {
-      post.classList += ' hide';
-      post.closest('article').classList += ' hide';
+  if (setup.canLike) {
+    newButton.innerHTML = `Running (${setup.likesCount})`;
+    window.scrollBy({
+      top: 250,
+      left: 0,
+      behavior: 'smooth',
     });
-    setTimeout(() => {
-      init();
-    }, postsToRemove.length * 500);
-  } else if (postsToLike.length) {
-    postsToLike.forEach((post, index) => {
-      setTimeout(() => {
-        if (setup.canLike && !checkBlockedStatus()) {
-          let article = post.closest('article');
+    const postButtons = Array.from(findPostButtons());
+    postButtons.forEach((postButton) => {
+      if (
+        postButton.getAttribute('aria-label') === 'Like' &&
+        setup.canLike &&
+        !checkBlockedStatus()
+      ) {
+        const { innerWidth, innerHeight } = window;
+        const { clientWidth, clientHeight } = document.documentElement;
+        const bounding = postButton.getBoundingClientRect();
+        if (
+          bounding.top >= 0 &&
+          bounding.left >= 0 &&
+          bounding.right <= (innerWidth || clientWidth) &&
+          bounding.bottom <= (innerHeight || clientHeight)
+        ) {
+          const article = postButton.closest('article');
           article.setAttribute('style', 'border:2px solid black;');
-          article.scrollIntoView();
-          post.parentNode.click();
+          postButton.parentNode.click();
           setup.likesCount++;
-          if (postsToLike.length - 1 === index) {
-            setTimeout(() => {
-              init();
-            }, 1000);
-          }
-        } else {
-          newButton.innerHTML = `Stopped (${setup.likesCount})`;
-          newButton.disabled = !setup.canLike;
+          newButton.innerHTML = `Running (${setup.likesCount})`;
         }
-      }, (index + 1) * 3000);
+      }
     });
-  } else {
-    document.querySelector('main > section > div > div').scrollIntoView(false);
     setTimeout(() => {
-      init();
+      if (setup.canLike) {
+        init();
+      } else {
+        newButton.innerHTML = `Stopped (${setup.likesCount})`;
+      }
     }, 1000);
+  } else {
+    newButton.innerHTML = `Stopped (${setup.likesCount})`;
   }
 };
 
@@ -95,8 +91,8 @@ const mainElement = document.querySelector('main');
 const newButton = document.createElement('button');
 newButton.innerHTML = 'Start';
 newButton.id = 'liker-start-button';
-newButton.disabled = !setup.canLike;
-if (!setup.canLike) newButton.innerHTML = `Stopped (${setup.likesCount})`;
+// newButton.disabled = !setup.canLike;
+// if (!setup.canLike) newButton.innerHTML = `Stopped (${setup.likesCount})`;
 newButton.onclick = init;
 newButton.style.position = 'fixed';
 newButton.style.width = '100%';
