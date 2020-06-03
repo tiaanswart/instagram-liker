@@ -29,7 +29,7 @@ const setup = {
     if (this.resetDate) {
       this.likesCount = 0;
       return true;
-    } else return this.likesCount < 60;
+    } else return this.likesCount < 120;
   },
   get likesCount() {
     let count = this.localStorage;
@@ -98,3 +98,15 @@ newButton.style.position = 'fixed';
 newButton.style.width = '100%';
 newButton.style.zIndex = 1;
 mainElement.insertBefore(newButton, mainElement.firstChild);
+
+const postsToLike = document.querySelectorAll(
+  'article > div > section > span > button > svg[aria-label="Like"]'
+);
+const postsAlreadyLiked = document.querySelectorAll(
+  'article > div > section > span > button > svg[aria-label="Unlike"]:not(.hide)'
+);
+if (postsToLike && postsToLike.length) {
+  postsToLike[0].scrollIntoView({ behavior: 'smooth', block: 'end' });
+} else if (postsAlreadyLiked && postsAlreadyLiked.length) {
+  Array.from(postsAlreadyLiked).pop().scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
